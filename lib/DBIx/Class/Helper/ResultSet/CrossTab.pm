@@ -185,24 +185,55 @@ L<parent>
 
 =head2 crosstab
 
- crosstab();
+     my $r = $s->search({}, { columns => [qw/fruit channel/], } )
+               ->crosstab({}, { 
+                                select  => [qw/fruit/], 
+                                on => [qw/channel/], 
+                                pivot => [ { sum => 'units' } ], 
+                                group_by => [qw/fruit/] 
+                              });
 
-=head2 parse_statement
+     $r->result_class('DBIx::Class::ResultClass::HashRefInflator');  # to inflate rows
 
- parse_statement();
+=head2 ATTRIBUTES
 
-=head2 _ref_to_as
+=head3 pivot
 
- _ref_to_as();
+This includes all functions and fields that must be summarized as an arrayref, in the same way as data can be aggregated in DBIx::Class.
 
-=head2 _ref_to_cross
+these:
 
- _ref_to_cross();
+     pivot => [ { sum => 'units' } ]  # aggregate function and field
+ 
+     pivot => [ \"sum(units)" ]       # literal SQL
 
-=head2 _ref_to_literal
+will both provide a sum of units as the result of the crosstab, while this:
 
- _ref_to_literal();
+     pivot => [ \"sum(units)", { avg => 'units }, \"count(distinct country)"  ]  # mixed, multiple fields
 
+will generate a total of units, the average and the number of distinct countries
+
+=head3 on
+
+This is the field (or function thereof) that will generate the column headers
+
+     on => [qw/channel/]
+
+will generate columns by channel
+
+     on => [qw/channel country/]
+
+will have one column per channel and country combination. It's not possible yet to pivot on a function of a field.
+
+=head3 others
+
+All other attributes work as documented in DBIx::Class::ResultSet
+
+=head2 COPYRIGHT AND LICENSE
+
+Copyright 2016-2017 Simone Cesano
+
+This library is free software; you may redistribute it and/or modify it under the same terms as Perl itself.
 
 =cut
 
